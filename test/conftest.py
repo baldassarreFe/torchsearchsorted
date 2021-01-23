@@ -1,11 +1,8 @@
 import pytest
-import torch
 
-devices = {'cpu': torch.device('cpu')}
-if torch.cuda.is_available():
-    devices['cuda'] = torch.device('cuda:0')
+import torch.testing
 
 
-@pytest.fixture(params=devices.values(), ids=devices.keys())
+@pytest.fixture(params=torch.testing.get_all_device_types())
 def device(request):
     return request.param

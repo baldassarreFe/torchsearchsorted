@@ -1,9 +1,11 @@
 import pytest
+from itertools import product
 
 import torch
+import torch.testing
 import numpy as np
+
 from torchsearchsorted import searchsorted, numpy_searchsorted
-from itertools import product, repeat
 
 
 def test_output_dtype():
@@ -111,6 +113,20 @@ def test_correct(test, device):
     out = searchsorted(a, v, side=test['side'])
     np.testing.assert_array_equal(out.cpu().numpy(), expected.numpy())
 
+
+def test_input_dtypes(device):
+    for dtype in torch.testing.get_all_math_dtypes(device):
+        if dtype == torch.float16:
+            continue
+        # These values are ok for all math dtypes, including uint8
+        a = torch.tensor([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]],
+                         dtype=dtype, device=device)
+        v = torch.tensor([[0, 99, 2], [5, 11, 8]],
+                         dtype=dtype, device=device)
+        expected = torch.tensor([[0, 5, 1], [0, 5, 2]], dtype=torch.long)
+
+        out = searchsorted(a, v, side='left')
+        np.testing.assert_array_equal(out.cpu().numpy(), expected.numpy())
 
 @pytest.mark.parametrize('Ba, Bv', [
     (Ba, Bv) for Ba, Bv in
